@@ -3,40 +3,28 @@
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 from selenium import webdriver
+from selenium.common import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as EC, expected_conditions
 
 from bs4 import BeautifulSoup
 from selenium.webdriver.support.wait import WebDriverWait
 import time
 
 from Bet import Bet
+from BetsFinder import BetsFinder
 
 
-def get_elements(driver1, url_, identifier_elements, name):
-    driver1.get(url_)
-    driver1.get(url_)
+def get_elements(driver2, url_, identifier_elements, name):
+    driver2.get(url_)
+    driver.get(url_)
     time.sleep(10)
-    elements = driver1.find_elements(identifier_elements, name)
+
+    ignored_exceptions = (NoSuchElementException, StaleElementReferenceException,)
+    elements = WebDriverWait(driver, 10, ignored_exceptions=ignored_exceptions) \
+        .until(expected_conditions.presence_of_element_located((identifier_elements, name)))
+    elements = driver.find_elements(identifier_elements, name)
     return elements
-
-
-def get_bets_efbet(elements_efbet_):
-    bets = []
-    for i in range(0, len(elements_efbet_)):
-        element = elements_efbet_[i]
-        els = element.text.split('\n')
-        if len(els) < 6:
-            continue
-        date = els[1]
-        team1 = els[2].split('vs')[0].split()[0].lower()
-        team2 = els[2].split('vs')[1].split()[0].lower()
-        coef1 = els[3]
-        coefe = els[4]
-        coef2 = els[5]
-        bet = Bet(date, team1, team2, coef1, coefe, coef2)
-        bets.append(bet)
-    return bets
 
 
 def get_bets_winbet(elements_winbet_):
@@ -123,13 +111,39 @@ if __name__ == '__main__':
         chrome_options.add_argument("--incognito")
         driver = webdriver.Chrome(options=chrome_options)
 
+        betsFinder = BetsFinder(driver)
+
+        # efbet_bets = []
+        # i = 0
+        # while True:
+        #     bets = betsFinder.get_efbet_bets_today('https://www.efbet.com/BG/sports#action=program&page=' + str(i), By.TAG_NAME, 'tr')
+        #     if not bets:
+        #         break
+        #     efbet_bets.extend(bets)
+        #     i += 1
+        #
+        #
+        #
+        #
+        # w = 1
+        # for odd in efbet_bets:
+        #     print(w, end='')
+        #     print('. | ', end=' ')
+        #     print(str(odd), end=' ')
+        #     print(
+        #         'Profit:' + str(-(1 / float(odd.coef1) + 1 / float(odd.coef2) + 1 / float(odd.coefequal)) * 100 + 100))
+        #     w += 1
+
+        # winbet_bets = []
+        # url_winbet_today = 'https://winbet.bg/sports/program'
+        # categories = get_elements(driver, url_winbet_today, By.XPATH, '//div[@class=\'react-tabs__tab icon-tab\']')
+
+
         url_efbet = 'https://www.efbet.com/BG/sports#bo-navigation=474582.1,475410.1,475411.1&action=market-group-list'
-        elements_efbet = get_elements(driver, url_efbet, By.TAG_NAME, 'tr')
-        bets_efbet_0margin = get_bets_efbet(elements_efbet)
+        bets_efbet_0margin = betsFinder.get_efbet_bets_football(url_efbet, By.TAG_NAME, 'tr')
 
         url_efbet = 'https://www.efbet.com/BG/sports#bo-navigation=282241.1&action=market-group-list'
-        elements_efbet = get_elements(driver, url_efbet, By.TAG_NAME, 'tr')
-        bets_efbet = get_bets_efbet(elements_efbet)
+        bets_efbet = betsFinder.get_efbet_bets_football(url_efbet, By.TAG_NAME, 'tr')
 
         # Get all the bets from winbet
         bets_winbet = []
@@ -161,6 +175,8 @@ if __name__ == '__main__':
         elements_winbet = get_elements(driver, url_winbet_0margin, By.XPATH, '//div[@class=\'d-flex event__wrapper\']')
         bets_winbet_0margin = get_bets_winbet(elements_winbet)
 
+
+
         # # Get all the bets from betano
         # url_betano = ('https://winbet.bg/sports/tournament?sportIds=soccer-19000034834,19000000054,19000000329,'
         #                          '19000000008,19000000491,19000000044,19000000217,19000000035')
@@ -180,12 +196,12 @@ if __name__ == '__main__':
         driver.quit()
         bestods1 = find_best_bets(bets_efbet, bets_winbet)
 
-        # bestods2 = find_best_bets(bestods1, bets_efbet_0margin)
-        #
-        # bestods3 = find_best_bets(bestods2, bets_winbet_0margin)
+        bestods2 = find_best_bets(bestods1, bets_efbet_0margin)
+
+        bestods3 = find_best_bets(bestods2, bets_winbet_0margin)
 
         w = 1
-        for odd in bestods1:
+        for odd in bestods3:
             print(w, end='')
             print('. | ', end=' ')
             print(str(odd), end=' ')
@@ -193,7 +209,7 @@ if __name__ == '__main__':
                 'Profit:' + str(-(1 / float(odd.coef1) + 1 / float(odd.coef2) + 1 / float(odd.coefequal)) * 100 + 100))
             w += 1
 
-        best_odd = bestods1[len(bestods1) - 1]
+        best_odd = bestods3[len(bestods3) - 1]
         if -(1 / float(best_odd.coef1) + 1 / float(best_odd.coef2) + 1 / float(best_odd.coefequal)) * 100 + 100 > 0.5:
             frequency = 2500
             duration = 1000
