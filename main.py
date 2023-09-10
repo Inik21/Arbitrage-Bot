@@ -17,13 +17,10 @@ from BetsFinder import BetsFinder
 
 def get_elements(driver2, url_, identifier_elements, name):
     driver2.get(url_)
-    driver.get(url_)
+    driver2.get(url_)
     time.sleep(10)
 
-    ignored_exceptions = (NoSuchElementException, StaleElementReferenceException,)
-    elements = WebDriverWait(driver, 10, ignored_exceptions=ignored_exceptions) \
-        .until(expected_conditions.presence_of_element_located((identifier_elements, name)))
-    elements = driver.find_elements(identifier_elements, name)
+    elements = driver2.find_elements(identifier_elements, name)
     return elements
 
 
@@ -134,10 +131,25 @@ if __name__ == '__main__':
         #         'Profit:' + str(-(1 / float(odd.coef1) + 1 / float(odd.coef2) + 1 / float(odd.coefequal)) * 100 + 100))
         #     w += 1
 
-        # winbet_bets = []
+        # winbet_bets = set()
         # url_winbet_today = 'https://winbet.bg/sports/program'
-        # categories = get_elements(driver, url_winbet_today, By.XPATH, '//div[@class=\'react-tabs__tab icon-tab\']')
-
+        # # categories = get_elements(driver, url_winbet_today, By.XPATH, '//div[@class=\'react-tabs__tab icon-tab\']')
+        #
+        # driver.get(url_winbet_today)
+        # time.sleep(10)
+        #
+        # height = driver.execute_script('return document.body.scrollHeight')
+        #
+        # # now break the webpage into parts so that each section in the page is scrolled through to load
+        # scroll_height = 0
+        # winbet_elements = set()
+        # for i in range(10):
+        #     scroll_height = scroll_height + (height / 10)
+        #     driver.execute_script('window.scrollTo(0,arguments[0]);', scroll_height)
+        #     time.sleep(1)
+        #     winbet_elements.update(driver.find_elements(By.XPATH, '//div[@class=\'d-flex event__wrapper\']'))
+        #
+        # print(len(winbet_elements))
 
         url_efbet = 'https://www.efbet.com/BG/sports#bo-navigation=474582.1,475410.1,475411.1&action=market-group-list'
         bets_efbet_0margin = betsFinder.get_efbet_bets_football(url_efbet, By.TAG_NAME, 'tr')
@@ -148,34 +160,24 @@ if __name__ == '__main__':
         # Get all the bets from winbet
         bets_winbet = []
 
-        url_winbet_bulg = ('https://winbet.bg/sports/tournament?sportIds=soccer-19000000247,19000000007,19000001135,'
-                           '19000040249,19000000480,19000000384,19000034480,19000000679')
-        elements_winbet = get_elements(driver, url_winbet_bulg, By.XPATH, '//div[@class=\'d-flex event__wrapper\']')
-        bets_winbet_bulg = get_bets_winbet(elements_winbet)
+        url_winbet = ('https://winbet.bg/sports/tournament?sportIds=soccer-19000000247,19000000007,19000001135,'
+                      '19000040249,19000000480,19000000384,19000034480,19000000679')
+        bets_winbet.extend(betsFinder.get_winbet_bets_football(url_winbet, By.XPATH, '//div[@class=\'d-flex '
+                                                                                     'event__wrapper\']'))
 
-        bets_winbet.extend(bets_winbet_bulg)
+        url_winbet = ('https://winbet.bg/sports/tournament?sportIds=soccer-19000000173,19000000025,19000000024,'
+                      '19000000018,19000000019,19000000021,19000000017')
+        bets_winbet.extend(betsFinder.get_winbet_bets_football(url_winbet, By.XPATH, '//div[@class=\'d-flex '
+                                                                                     'event__wrapper\']'))
 
-        url_winbet_england = ('https://winbet.bg/sports/tournament?sportIds=soccer-19000000173,19000000025,19000000024,'
-                              '19000000018,19000000019,19000000021,19000000017')
-        elements_winbet = get_elements(driver, url_winbet_england, By.XPATH, '//div[@class=\'d-flex event__wrapper\']')
-        bets_winbet_england = get_bets_winbet(elements_winbet)
+        url_winbet = ('https://winbet.bg/sports/tournament?sportIds=soccer-19000034834,19000000054,19000000329,'
+                      '19000000008,19000000491,19000000044,19000000217,19000000035')
+        bets_winbet.extend(betsFinder.get_winbet_bets_football(url_winbet, By.XPATH, '//div[@class=\'d-flex '
+                                                                                     'event__wrapper\']'))
 
-        bets_winbet.extend(bets_winbet_england)
-
-        url_winbet_germ_spain = (
-            'https://winbet.bg/sports/tournament?sportIds=soccer-19000034834,19000000054,19000000329,'
-            '19000000008,19000000491,19000000044,19000000217,19000000035')
-        elements_winbet = get_elements(driver, url_winbet_germ_spain, By.XPATH,
-                                       '//div[@class=\'d-flex event__wrapper\']')
-        bets_winbet_germ_spain = get_bets_winbet(elements_winbet)
-
-        bets_winbet.extend(bets_winbet_germ_spain)
-
-        url_winbet_0margin = 'https://winbet.bg/sports/accents/1236'
-        elements_winbet = get_elements(driver, url_winbet_0margin, By.XPATH, '//div[@class=\'d-flex event__wrapper\']')
-        bets_winbet_0margin = get_bets_winbet(elements_winbet)
-
-
+        url_winbet = 'https://winbet.bg/sports/accents/1236'
+        bets_winbet_0margin = betsFinder.get_winbet_bets_football(url_winbet, By.XPATH, '//div[@class=\'d-flex '
+                                                                                        'event__wrapper\']')
 
         # # Get all the bets from betano
         # url_betano = ('https://winbet.bg/sports/tournament?sportIds=soccer-19000034834,19000000054,19000000329,'
@@ -194,14 +196,14 @@ if __name__ == '__main__':
         #     print(str(bet))
 
         driver.quit()
-        bestods1 = find_best_bets(bets_efbet, bets_winbet)
+        bestodds1 = find_best_bets(bets_efbet, bets_winbet)
 
-        bestods2 = find_best_bets(bestods1, bets_efbet_0margin)
+        bestodds2 = find_best_bets(bestodds1, bets_efbet_0margin)
 
-        bestods3 = find_best_bets(bestods2, bets_winbet_0margin)
+        bestodds3 = find_best_bets(bestodds2, bets_winbet_0margin)
 
         w = 1
-        for odd in bestods3:
+        for odd in bestodds3:
             print(w, end='')
             print('. | ', end=' ')
             print(str(odd), end=' ')
@@ -209,7 +211,7 @@ if __name__ == '__main__':
                 'Profit:' + str(-(1 / float(odd.coef1) + 1 / float(odd.coef2) + 1 / float(odd.coefequal)) * 100 + 100))
             w += 1
 
-        best_odd = bestods3[len(bestods3) - 1]
+        best_odd = bestodds3[len(bestodds3) - 1]
         if -(1 / float(best_odd.coef1) + 1 / float(best_odd.coef2) + 1 / float(best_odd.coefequal)) * 100 + 100 > 0.5:
             frequency = 2500
             duration = 1000

@@ -49,6 +49,27 @@ def transform_into_bets_efbet_today(elements):
     return bets
 
 
+def transform_into_bets_winbet_football(elements):
+    bets = []
+    for i in range(0, len(elements)):
+        element = elements[i]
+        els = element.text.split('\n')
+        dates = els[2].split()
+        if len(dates) > 2:
+            date = els[2].split()[1]
+        else:
+            date = els[2].split()[0]
+
+        team1 = els[0].split()[0].lower()
+        team2 = els[1].split()[0].lower()
+        coef1 = els[4]
+        coefe = els[5]
+        coef2 = els[6]
+        bet = Bet(date, team1, team2, coef1, coefe, coef2)
+        bets.append(bet)
+    return bets
+
+
 def get_elements(driver, url_, identifier_elements, name):
     driver.get(url_)
     driver.get(url_)
@@ -74,4 +95,9 @@ class BetsFinder:
     def get_efbet_bets_today(self, url, identifier_elements, name):
         elements = get_elements(self.driver, url, identifier_elements, name)
         bets = transform_into_bets_efbet_today(elements)
+        return bets
+
+    def get_winbet_bets_football(self, url, identifier_elements, name):
+        elements = get_elements(self.driver, url, identifier_elements, name)
+        bets = transform_into_bets_winbet_football(elements)
         return bets
